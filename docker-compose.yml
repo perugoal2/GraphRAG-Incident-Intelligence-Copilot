@@ -1,0 +1,11 @@
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: neo4j
+    ports: ["7474:7474", "7687:7687"]   # 7474 = browser UI, 7687 = Bolt (driver)
+    environment:
+      NEO4J_AUTH: neo4j/password123
+    volumes:
+      - neo4j-data:/data
+volumes:
+  neo4j-data:
