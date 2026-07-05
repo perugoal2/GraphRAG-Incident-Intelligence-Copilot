@@ -28,6 +28,28 @@ import uuid
 
 from copilot.graph import run
 
+# ---------------------------------------------------------------------------
+# Mapping: graph short-name → Kubernetes pod label (app=)
+# ---------------------------------------------------------------------------
+
+_GRAPH_TO_K8S: dict[str, str] = {
+    "cart":           "cartservice",
+    "checkout":       "checkoutservice",
+    "email":          "emailservice",
+    "payment":        "paymentservice",
+    "productcatalog": "productcatalogservice",
+    "recommendation": "recommendationservice",
+    "shipping":       "shippingservice",
+    "ad":             "adservice",
+    "frontend":       "frontend",
+    "redis":          "redis-cart",
+}
+
+
+def _k8s_label(graph_name: str) -> str:
+    """Return the Kubernetes app= label for a graph service name."""
+    return _GRAPH_TO_K8S.get(graph_name, graph_name)
+
 
 # ---------------------------------------------------------------------------
 # Core: write a chaos-labelled incident into the graph
@@ -133,9 +155,10 @@ def inject_and_record(
     """
     inc_id = experiment_id or f"CHAOS-{uuid.uuid4().hex[:8].upper()}"
     exp_name = f"incident-lab-{inc_id.lower()}"
+    k8s_label = _k8s_label(service)   # translate graph name → k8s pod label
 
     template = _POD_CHAOS if chaos_type == "pod-kill" else _NETWORK_CHAOS
-    manifest = template.format(name=exp_name, service=service)
+    manifest = template.format(name=exp_name, service=k8s_label)
 
     print(f"[chaos] Injecting {chaos_type} into '{service}' (id={inc_id}) ...")
     _apply_manifest(manifest)

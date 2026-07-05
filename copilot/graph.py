@@ -175,3 +175,25 @@ def build_testset() -> list[dict]:
                s.name AS affected, c.name AS true_cause
         """
     )
+
+
+def build_chaos_testset() -> list[dict]:
+    """
+    Return chaos-labelled (synthetic=false) incidents as [{id, symptom, affected, true_cause}].
+    Each incident appears once — affected is the first downstream service found
+    (any valid starting point yields the same root-cause candidates via graph traversal).
+    CHAOS-001 is excluded: it used the raw k8s label before the name-mapping fix.
+    """
+    return run(
+        """
+        MATCH (inc:Incident {synthetic: false})-[:AFFECTED]->(s:Service),
+              (inc)-[:CAUSED_BY]->(c:Service)
+        WHERE inc.id <> 'CHAOS-001'
+        WITH inc, s, c
+        ORDER BY inc.id, s.name
+        WITH inc, head(collect(s.name)) AS affected, c.name AS true_cause
+        RETURN inc.id AS id, inc.symptom AS symptom,
+               affected, true_cause
+        ORDER BY inc.id
+        """
+    )

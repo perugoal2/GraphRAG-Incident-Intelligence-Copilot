@@ -12,13 +12,19 @@ The delta between modes is the headline result: hybrid should outperform
 either signal alone, proving the GraphRAG design earns its complexity.
 """
 
+from copilot.graph import build_chaos_testset as _graph_build_chaos_testset
 from copilot.graph import build_testset as _graph_build_testset
 from copilot.retrieve import hybrid, root_cause_candidates, vector_search
 
 
 def build_testset() -> list[dict]:
-    """Return holdout incidents: [{id, symptom, affected, true_cause}]."""
+    """Return holdout synthetic incidents: [{id, symptom, affected, true_cause}]."""
     return _graph_build_testset()
+
+
+def build_chaos_testset() -> list[dict]:
+    """Return chaos-labelled incidents: [{id, symptom, affected, true_cause}]."""
+    return _graph_build_chaos_testset()
 
 
 def candidates_for(symptom: str, affected_svc: str, mode: str, k: int = 5) -> list[str]:

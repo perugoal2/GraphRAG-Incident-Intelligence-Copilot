@@ -60,15 +60,20 @@ def ask(
 @app.command()
 def ablate(
     n: int = typer.Option(3, "--n", help="Top-N candidates for hit-rate metric"),
+    chaos: bool = typer.Option(False, "--chaos", help="Use chaos-labelled incidents instead of holdout synthetic set"),
 ) -> None:
     """
-    Ablation study: compare vector-only, graph-only, and hybrid retrieval
-    on the held-out test set. Hybrid should win — that's the GraphRAG payoff.
+    Ablation study: compare vector-only, graph-only, and hybrid retrieval.
+    Use --chaos to evaluate on real chaos-injected incidents.
     """
-    from copilot.eval import ablation, build_testset
+    from copilot.eval import ablation, build_chaos_testset, build_testset
 
-    typer.echo("Loading holdout test set ...")
-    testset = build_testset()
+    if chaos:
+        typer.echo("Loading chaos-labelled test set ...")
+        testset = build_chaos_testset()
+    else:
+        typer.echo("Loading holdout synthetic test set ...")
+        testset = build_testset()
 
     if not testset:
         typer.echo(
